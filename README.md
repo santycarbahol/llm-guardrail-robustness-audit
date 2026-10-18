@@ -37,6 +37,19 @@ Prints two tables and saves every trial to `results/<model>.csv`:
 |---|---|
 | none (control), naive, ignore_previous, fake_system, role_play, fake_completion, base64_encoded, other_language, payload_split | none, hardened_prompt, delimiters, spotlighting, sandwich |
 
+### Comparing models
+
+Run the grid once per model (change `MODEL_NAME` / `MODEL_BASE_URL` in `.env` between
+runs); each run adds a CSV to `results/`. Then:
+
+```bash
+python src/plot_results.py
+```
+
+- `figures/asr_heatmap.png`: attack x defense success rate, one panel per model
+- `figures/summary.md`: per-defense ASR vs. utility, including utility with no attack
+  (the cost of the defense on clean inputs)
+
 ## Running models on an HPC cluster (example: NCSA Delta)
 
 1. On the login node, edit `--account` in `slurm/serve_vllm.sbatch`, then:
