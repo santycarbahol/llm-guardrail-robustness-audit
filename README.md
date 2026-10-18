@@ -21,6 +21,22 @@ ollama pull qwen2.5:7b
 # .env: MODEL_BASE_URL=http://localhost:11434/v1  MODEL_NAME=qwen2.5:7b
 ```
 
+## Running the attack x defense grid
+
+```bash
+python src/run_grid.py                                   # 9 attacks x 5 defenses x 5 tasks
+python src/run_grid.py --repeats 3 --temperature 0.7     # sampled, for variance
+python src/run_grid.py --attacks naive,fake_system --defenses none,sandwich
+```
+
+Prints two tables and saves every trial to `results/<model>.csv`:
+- **injected**: attack success rate (the model output the hidden canary)
+- **utility**: the summary still covered the document's key facts
+
+| Attacks (`src/attacks.py`) | Defenses (`src/defenses.py`) |
+|---|---|
+| none (control), naive, ignore_previous, fake_system, role_play, fake_completion, base64_encoded, other_language, payload_split | none, hardened_prompt, delimiters, spotlighting, sandwich |
+
 ## Running models on an HPC cluster (example: NCSA Delta)
 
 1. On the login node, edit `--account` in `slurm/serve_vllm.sbatch`, then:
