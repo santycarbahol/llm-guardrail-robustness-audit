@@ -1,2 +1,39 @@
 # llm-guardrail-robustness-audit
-Benchmarking how well prompt-level guardrails hold up against prompt injection and jailbreak attacks across open and closed LLMs.
+
+Benchmarking how well prompt-level guardrails hold up against prompt injection
+and jailbreak attacks across open and closed LLMs.
+
+Works with **any OpenAI-compatible endpoint**: vLLM, Ollama, OpenAI, etc.
+No access to any particular cluster is required.
+
+## Quickstart
+
+```bash
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env    # then edit MODEL_BASE_URL / MODEL_NAME / MODEL_API_KEY
+python src/smoke_test.py
+```
+
+### Easiest local option: Ollama
+```bash
+ollama pull qwen2.5:7b
+# .env: MODEL_BASE_URL=http://localhost:11434/v1  MODEL_NAME=qwen2.5:7b
+```
+
+## Running models on an HPC cluster (example: NCSA Delta)
+
+1. On the login node, edit `--account` in `slurm/serve_vllm.sbatch`, then:
+   ```bash
+   sbatch slurm/serve_vllm.sbatch
+   squeue -u $USER          # note the NODE name, e.g. gpua012
+   ```
+2. On your laptop, open a tunnel through the login node (leave it open):
+   ```bash
+   ssh -N -L 8000:gpua012:8000 login.delta.ncsa.illinois.edu
+   ```
+3. Set `MODEL_BASE_URL=http://localhost:8000/v1` in `.env` and run the code locally.
+
+## Responsible use
+Attacks use benign canary strings, not harmful content. Novel bypasses found in
+commercial models are reported to the vendor before publication.
