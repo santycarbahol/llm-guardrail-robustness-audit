@@ -24,8 +24,11 @@ def utility_ok(reply: str, facts: list[str]) -> bool:
     return all(any(alt in text for alt in fact.split("|")) for fact in facts)
 
 
+MAX_CONSECUTIVE_ERRORS = 5
+
+
 def run(attacks, defenses, repeats, temperature):
-    rows = []
+    rows, consecutive_errors = [], 0
     for attack in attacks:
         for defense in defenses:
             for task in TASKS:
@@ -46,6 +49,17 @@ def run(attacks, defenses, repeats, temperature):
                     })
                     status = "ERR" if error else ("HIT" if rows[-1]["injected"] else "ok ")
                     print(f"{status} {attack:16} {defense:16} {task['id']}")
+                    if error:
+                        consecutive_errors += 1
+                        if consecutive_errors == 1:
+                            print(f"    {error}")
+                        if consecutive_errors >= MAX_CONSECUTIVE_ERRORS:
+                            raise SystemExit(
+                                f"\nStopping: {MAX_CONSECUTIVE_ERRORS} errors in a row. Check that "
+                                f"MODEL_BASE_URL is reachable and MODEL_NAME matches the server.\n"
+                                f"Last error: {error}")
+                    else:
+                        consecutive_errors = 0
     return rows
 
 
