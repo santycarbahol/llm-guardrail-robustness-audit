@@ -52,9 +52,10 @@ python src/plot_results.py
 
 ## Running models on an HPC cluster (example: NCSA Delta)
 
-1. On the login node, edit `--account` in `slurm/serve_vllm.sbatch`, then:
+1. On the login node, clone the repo under your project's `/work/hdd/<project>/`
+   (see `quota`), do the one-time vLLM install in the script's comments, then:
    ```bash
-   sbatch slurm/serve_vllm.sbatch
+   sbatch --account=<yours>-delta-gpu slurm/serve_vllm.sbatch   # see `accounts`
    squeue -u $USER          # note the NODE name, e.g. gpua012
    ```
 2. On your laptop, open a tunnel through the login node (leave it open):
