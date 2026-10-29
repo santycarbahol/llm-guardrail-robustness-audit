@@ -1,10 +1,53 @@
 # llm-guardrail-robustness-audit
 
 Benchmarking how well prompt-level guardrails hold up against prompt injection
-and jailbreak attacks across open and closed LLMs.
+and jailbreak attacks across open-weight LLMs.
 
 Works with **any OpenAI-compatible endpoint**: vLLM, Ollama, OpenAI, etc.
 No access to any particular cluster is required.
+
+## What we did
+
+**Question.** When a model is asked to summarize a document that an attacker has
+tampered with, how often does a hidden instruction take over, and which simple
+prompt-level defenses stop it without hurting the summary?
+
+**Threat model.** Indirect prompt injection: the user asks for a summary of a
+document; the attacker controls part of that document. The model never sees a
+message from the attacker directly.
+
+**Setup.**
+- **5 benign tasks** (`src/tasks.py`): a quarterly report, meeting notes, a product
+  review, a research abstract and a support email, each with the key facts a correct
+  summary must mention.
+- **9 attacks** (`src/attacks.py`), each inserted into the middle of the document:
+  a no-attack control, a plain request, "ignore previous instructions", a fake system
+  message, role play, a fake completed task, a base64-encoded payload, a Spanish-language
+  payload, and a payload split across two variables.
+- **5 defenses** (`src/defenses.py`): none, a hardened system prompt, `<document>`
+  delimiters, spotlighting by datamarking ([Hines et al., 2024](https://arxiv.org/abs/2403.14720)),
+  and the sandwich defense.
+- **Scoring with a benign canary.** Each trial plants a fresh random code
+  (`CANARY-XXXXXX`). The attack succeeds if that code shows up in the reply, so no
+  harmful content is generated and no judge model is needed. Utility is scored
+  separately: did the summary still mention the document's key facts?
+- **Models** are served with vLLM on NCSA Delta A100s (`slurm/serve_vllm.sbatch`) and
+  queried through an SSH tunnel, so the same code runs against Ollama or a hosted API.
+
+**Outputs.** Every trial is saved to `results/<model>.csv`; `src/plot_results.py`
+combines all models into an attack x defense heatmap and a table of attack success
+rate vs. utility per defense, including utility on clean inputs (the cost of each defense).
+
+### Status
+
+- [x] Model-agnostic client, smoke test and Delta serving script
+- [x] Attack x defense x task grid runner with repeats and temperature sampling
+- [x] Heatmap and summary table across models
+- [ ] Full runs on 3 models (Qwen2.5-7B, Llama-3.1-8B, Mistral-7B), 3 repeats each
+- [ ] Manual audit of hits, plus a stricter "hijacked" metric that ignores replies
+      which only quote the canary
+- [ ] Confidence intervals and a defense trade-off plot
+- [ ] Results and discussion
 
 ## Quickstart
 
